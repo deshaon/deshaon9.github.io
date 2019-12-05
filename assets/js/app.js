@@ -10,13 +10,15 @@ import css from "../css/app.css"
 // Import dependencies
 //
 import "phoenix_html"
+import {Presence} from "phoenix"
+import * as monaco from "monaco-editor"
 
 // Import local files
 //
 // Local files can be imported directly using relative paths, for example:
 // import socket from "./socket"
 
-import * as monaco from 'monaco-editor';
+import socket from "./socket"
 
 console.log('hello1')
 
@@ -75,5 +77,20 @@ monaco.editor.create(document.getElementById('container'), {
   language: 'javascript',
   theme: 'vs-dark'
 });
+
+let channel = socket.channel("room:lobby", {});
+let presence = new Presence(channel)
+
+function renderOnlineUsers(presenec) {
+  let response = ""
+  presence.list((id, {metas: [first, ...rest]}) => {
+    let count = rest.length + 1
+    response += `<br>${id} (count: ${count})</br>\n`
+  })
+  document.querySelector("main[role=main]").innerHTML = response
+  console.log(response)
+}
+presence.onSync(() => renderOnlineUsers(presence))
+channel.join()
 
 console.log('hello2')
