@@ -48,31 +48,46 @@ class MonacoEditor{
       language: 'javascript',
       //theme: 'vs-dark'
     });
-    editorText=editor1.getValue();
-    editor1.getModel().onDidChangeContent((event) => {
+    // editorText=editor1.getValue();
+    // editor1.onDidChangeModelContent((event) => {
+    //   console.log('something changed', event)
+    // })
+    // editor1.getModel().onDidChangeContent((event) => {
+    editor1.onDidChangeModelContent((event) => {
+      console.log('pushing', event)
+      if(event.versionId === 2){
+        console.log('pushed', event)
         channel.push('shout',{
             evnt: event,
-            op: {
-                identifier: { major: 1, minor: 1 },
-                range: event.changes[0].range,
-                text: event.changes[0].text,
-                forceMoveMarkers: false
-            },
-            text: editor1.getValue()
+            // op: {
+            //     identifier: { major: 1, minor: 1 },
+            //     range: event.changes[0].range,
+            //     text: event.changes[0].text,
+            //     forceMoveMarkers: false
+            // },
+            // text: editor1.getValue(),
         }); 
+      }
     }); 
     channel.on('shout', function(payload){
-            var curpos = editor1.getPosition();
-            console.log(payload.evnt);
-            console.log(payload.op);
-            editorText=payload.text;
-            console.log(editorText);
-            if(payload.text.localeCompare(editor1.getValue())){
-                editor1.executeEdits("user1", [payload.op]);
-            }
-            console.log(editor1.getValue());
+      console.log('on shout', payload.evnt)
+      if(payload.evnt.versionId === 2) {
+            // var curpos = editor1.getPosition();
+            // console.log(payload.evnt);
+            // console.log(payload.op);
+            // editorText=payload.text;
+            // console.log(editorText);
+            // if(payload.text.localeCompare(editor1.getValue())){
+              // console.log(payload.op)  
+              console.log('changes', payload.evnt.changes[0])
+                // editor1.executeEdits("user1", [payload.op]);
+                // editor1.getModel().pushEditOperations(payload.evnt.changes[0])
+                editor1.executeEdits("user1", [payload.evnt.changes[0]]);
+            // }
+            // console.log(editor1.getValue());
             // editor1.setValue(payload.text);
             // editor1.setPosition(curpos);
+          }
     });
     }
 }
