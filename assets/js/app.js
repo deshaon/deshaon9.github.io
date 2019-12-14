@@ -15,6 +15,7 @@ import "phoenix_html"
 
 import { Presence, Socket } from "phoenix"
 
+//for displaying the list of users who are currently online
 function displayUsers() {
     function renderOnlineUsers(presence) {
         let response = ""
@@ -25,8 +26,8 @@ function displayUsers() {
         let userList = document.getElementById("userList")
         userList.innerHTML = response
     }
-    presence.onSync(() => 
-    renderOnlineUsers(presence)
+    presence.onSync(() =>
+        renderOnlineUsers(presence)
     )
 }
 
@@ -44,33 +45,37 @@ function generateColor() {
     else return "yellow"
 }
 
-var cm=window.cm
+//editor object created in index.html.eex
+var cm = window.cm
 
+//gets the user name as a paramaeter from the url
 let user = document.getElementById("user").innerText
+
+//for assigning a color to identify users
 var userColor = generateColor()
+
 let socket = new Socket("/socket", { params: { user: user, userColor: userColor } })
 socket.connect()
+
 let channel = socket.channel("room:lobby", {});
+
 let presence = new Presence(channel)
+
 displayUsers()
+
 channel.join()
+
 var markers = {}
-presence.onLeave((id,current,leftPres) =>{
-    if(current.metas.length==0){
+
+//for deleting the cursor of the user who leaves the connection
+presence.onLeave((id, current, leftPres) => {
+    if (current.metas.length == 0) {
         markers[id].clear()
-       delete markers[id]
-       // console.log(typeof markers)
+        delete markers[id]
     }
 })
-cm.on("beforeChange", (cm, changeobj) => {
-    console.log(changeobj);
-    if (changeobj.origin != undefined) {
-        channel.push('shout', {
-            changeobj: changeobj,
-            user: user
-        });
-    }
-})
+
+//for detecting cursor movement
 cm.on("cursorActivity", (cm) => {
     var cursorPos = cm.getCursor();
 
@@ -79,10 +84,11 @@ cm.on("cursorActivity", (cm) => {
         cursorColor: userColor
     });
 });
+
+//handles the cursor movement and creates a cursor mark on the editor
 channel.on("updateCursor", function (payload) {
     console.log(markers)
     var cursor = document.createElement('span');
-
     if (user != payload.user_name) {
         cursor.style.borderLeftStyle = 'solid';
         cursor.style.borderLeftWidth = '1px';
@@ -93,12 +99,24 @@ channel.on("updateCursor", function (payload) {
         if (markers[payload.user_name] != undefined) {
             markers[payload.user_name].clear();
         }
-        markers[payload.user_name] = cm.setBookmark(payload.cursorPos, { widget: cursor , handleMouseEvents: true});
+        markers[payload.user_name] = cm.setBookmark(payload.cursorPos, { widget: cursor, handleMouseEvents: true });
     }
-    if(markers[payload.user_name] != undefined && user==payload.user_name){
+    if (markers[payload.user_name] != undefined && user == payload.user_name) {
         markers[payload.user_name].clear();
     }
 })
+
+
+cm.on("beforeChange", (cm, changeobj) => {
+    console.log(changeobj);
+    if (changeobj.origin != undefined) {
+        channel.push('shout', {
+            changeobj: changeobj,
+            user: user
+        });
+    }
+})
+
 channel.on('shout', function (payload) {
     console.log(payload.changeobj);
     if (user != payload.user) {
