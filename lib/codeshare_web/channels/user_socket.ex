@@ -2,7 +2,7 @@ defmodule CodeshareWeb.UserSocket do
   use Phoenix.Socket
 
   ## Channels
-  channel "room:lobby", CodeshareWeb.RoomChannel
+  channel "room:*", CodeshareWeb.RoomChannel
 
   ## Transports
   transport(:websocket, Phoenix.Transports.WebSocket)
@@ -36,7 +36,6 @@ defmodule CodeshareWeb.UserSocket do
   # Returning `nil` makes this socket anonymous.
   # def id(_socket), do: nil
   def id(socket) do
-    IO.inspect(socket.assigns.user_id)
     "user_socket:#{socket.assigns.user_id}"
   end
 end
