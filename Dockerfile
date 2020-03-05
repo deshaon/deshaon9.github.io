@@ -1,5 +1,13 @@
-FROM ubuntu
+FROM iron/gcc:dev
 
-RUN apt-get update -y
+RUN apk add --no-cache bash
 
-CMD ["mix deps.get"]
+WORKDIR /opt/test
+
+# ADD . /opt/test
+
+ENTRYPOINT ["bash", "compile.sh"]  
+
+
+
+
